@@ -8,13 +8,15 @@ $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIden
 
 if (-not $isAdmin) {
     # 2. 관리자 권한이 없으면 UAC 프롬프트를 띄워 새 세션 실행
-    Write-Host "관리자 권한이 필요합니다. 권한을 상승하여 다운로드를 진행합니다..." -ForegroundColor Yellow
+    Write-Host "관리자 권한이 필요합니다. 권한을 상승하여 다운로드 및 실행을 진행합니다..." -ForegroundColor Yellow
     
-    # 새 창에서 실행할 다운로드 명령어 세트 구성
+    # 새 창에서 실행할 다운로드 및 실행 명령어 세트 구성
     $command = "try { " +
                "    Write-Host '다운로드 중... ($url)' -ForegroundColor Cyan; " +
                "    Invoke-WebRequest -Uri '$url' -OutFile '$destPath' -UseBasicParsing; " +
                "    Write-Host '`n다운로드 완료: $destPath' -ForegroundColor Green; " +
+               "    Write-Host '파일을 실행합니다...' -ForegroundColor Cyan; " +
+               "    Start-Process -FilePath '$destPath'; " +
                "} catch { " +
                "    Write-Host '`n오류 발생: ' `$_.Exception.Message -ForegroundColor Red; " +
                "} " +
@@ -25,7 +27,7 @@ if (-not $isAdmin) {
     exit
 }
 
-# 3. 이미 관리자 권한인 경우 현재 창에서 직접 다운로드 실행
+# 3. 이미 관리자 권한인 경우 현재 창에서 직접 다운로드 및 실행
 try {
     Write-Host "관리자 권한으로 실행 중입니다." -ForegroundColor Green
     Write-Host "파일 다운로드를 시작합니다: $url" -ForegroundColor Cyan
@@ -33,7 +35,10 @@ try {
     Invoke-WebRequest -Uri $url -OutFile $destPath -UseBasicParsing
     
     Write-Host "다운로드가 완료되었습니다. 경로: $destPath" -ForegroundColor Green
+
+    Write-Host "다운로드한 파일을 실행합니다..." -ForegroundColor Cyan
+    Start-Process -FilePath $destPath
 }
 catch {
-    Write-Host "다운로드 중 오류가 발생했습니다: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "작업 중 오류가 발생했습니다: $($_.Exception.Message)" -ForegroundColor Red
 }
