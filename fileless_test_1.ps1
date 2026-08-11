@@ -1,17 +1,39 @@
+# 다운로드할 파일의 URL 및 저장할 파일명 설정
+$url = "https://wildfire.paloaltonetworks.com/publicapi/test/pe" # 실제 URL로 변경하세요.
+$fileName = "wf_test.exe" # 저장할 파일명으로 변경하세요.
+$destPath = "C:\Users\dasomkim\Downloads\$fileName"
+
 # 1. 관리자 권한 확인
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
-    # 2. 관리자 권한이 없으면 관리자 권한으로 새 PowerShell 세션 실행
-    Write-Host "관리자 권한이 필요합니다. 권한을 상승하여 스크립트를 재실행합니다..." -ForegroundColor Yellow
+    # 2. 관리자 권한이 없으면 UAC 프롬프트를 띄워 새 세션 실행
+    Write-Host "관리자 권한이 필요합니다. 권한을 상승하여 다운로드를 진행합니다..." -ForegroundColor Yellow
+    
+    # 새 창에서 실행할 다운로드 명령어 세트 구성
+    $command = "try { " +
+               "    Write-Host '다운로드 중... ($url)' -ForegroundColor Cyan; " +
+               "    Invoke-WebRequest -Uri '$url' -OutFile '$destPath' -UseBasicParsing; " +
+               "    Write-Host '`n다운로드 완료: $destPath' -ForegroundColor Green; " +
+               "} catch { " +
+               "    Write-Host '`n오류 발생: ' `$_.Exception.Message -ForegroundColor Red; " +
+               "} " +
+               "Read-Host '`n창을 닫으려면 Enter를 누르세요...'"
+    
+    # 권한 상승하여 실행
+    Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"$command`"" -Verb RunAs
+    exit
+}
 
-# 2. Ping 테스트 실행 (기본 4회 전송)
-Write-Host "Ping 테스트를 시작합니다: 211.241.237.31" -ForegroundColor Cyan
-ping 211.241.237.31
-
-# (선택 사항) PowerShell 전용 명령어인 Test-Connection을 사용할 경우 위 ping 명령어 대신 아래 주석을 해제하여 사용하세요.
-# Test-Connection -ComputerName 211.241.237.31 -Count 4
-
-# 3. 계산기 프로그램 실행
-Write-Host "계산기 프로그램을 실행합니다." -ForegroundColor Cyan
-Start-Process -FilePath "C:\Windows\System32\calc.exe"
+# 3. 이미 관리자 권한인 경우 현재 창에서 직접 다운로드 실행
+try {
+    Write-Host "관리자 권한으로 실행 중입니다." -ForegroundColor Green
+    Write-Host "파일 다운로드를 시작합니다: $url" -ForegroundColor Cyan
+    
+    Invoke-WebRequest -Uri $url -OutFile $destPath -UseBasicParsing
+    
+    Write-Host "다운로드가 완료되었습니다. 경로: $destPath" -ForegroundColor Green
+}
+catch {
+    Write-Host "다운로드 중 오류가 발생했습니다: $($_.Exception.Message)" -ForegroundColor Red
+}
