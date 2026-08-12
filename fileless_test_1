@@ -1,7 +1,7 @@
 # 다운로드할 파일의 URL 및 저장할 파일명 설정
 $url = "https://wildfire.paloaltonetworks.com/publicapi/test/pe" # 실제 URL로 변경하세요.
 $fileName = "wf_test.exe" # 저장할 파일명으로 변경하세요.
-$destPath = "C:\Users\dasomkim\Downloads\$fileName"
+$destPath = "$env:USERPROFILE\Downloads\$fileName"
 
 # 1. 관리자 권한 확인
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
